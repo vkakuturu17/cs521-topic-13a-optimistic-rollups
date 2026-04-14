@@ -55,8 +55,6 @@ Use a separate `.env` file on each laptop.
 DEPLOYER_PRIVATE_KEY=0x<sequencer-private-key>
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 CHALLENGE_PERIOD_SECONDS=60
-SEQUENCER_BOND_ETH=0.01
-CHALLENGER_BOND_ETH=0.005
 ```
 
 ### Challenger laptop
@@ -64,8 +62,6 @@ CHALLENGER_BOND_ETH=0.005
 ```env
 DEPLOYER_PRIVATE_KEY=0x<challenger-private-key>
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-SEQUENCER_BOND_ETH=0.01
-CHALLENGER_BOND_ETH=0.005
 ```
 
 Each side uses its own key as `DEPLOYER_PRIVATE_KEY` for signing role actions.
@@ -93,13 +89,13 @@ Copy and share the deployed `CONTRACT_ADDRESS` with challenger laptop.
 ### Sequencer submits batch with wrong final state
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=19 DELTAS_CSV="5,-2,4,1" SEQUENCER_BOND_ETH=0.01 pnpm run interactive:submit:base-sepolia
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=19 DELTAS_CSV="5,-2,4,1" pnpm run interactive:submit:base-sepolia
 ```
 
 ### Challenger opens dispute
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract BATCH_ID=1 CHALLENGER_FINAL_STATE=18 CHALLENGER_BOND_ETH=0.005 pnpm run interactive:challenge:base-sepolia
+CONTRACT_ADDRESS=0xYourContract BATCH_ID=1 CHALLENGER_FINAL_STATE=18 pnpm run interactive:challenge:base-sepolia
 ```
 
 ### Bisection rounds
@@ -137,13 +133,13 @@ Use a new batch (`BATCH_ID=2`).
 ### Sequencer submits honest batch
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV="5,-2,4,1" SEQUENCER_BOND_ETH=0.01 pnpm run interactive:submit:base-sepolia
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV="5,-2,4,1" pnpm run interactive:submit:base-sepolia
 ```
 
 ### Challenger makes incorrect dispute
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract BATCH_ID=2 CHALLENGER_FINAL_STATE=20 CHALLENGER_BOND_ETH=0.005 pnpm run interactive:challenge:base-sepolia
+CONTRACT_ADDRESS=0xYourContract BATCH_ID=2 CHALLENGER_FINAL_STATE=20 pnpm run interactive:challenge:base-sepolia
 ```
 
 ### Bisection rounds

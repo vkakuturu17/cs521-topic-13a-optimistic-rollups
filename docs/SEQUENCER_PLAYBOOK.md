@@ -12,8 +12,6 @@ Use alongside [CHALLENGER_PLAYBOOK.md](CHALLENGER_PLAYBOOK.md).
 DEPLOYER_PRIVATE_KEY=0x<sequencer-private-key>
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
 CHALLENGE_PERIOD_SECONDS=60
-SEQUENCER_BOND_ETH=0.01
-CHALLENGER_BOND_ETH=0.005
 ```
 
 2. Install and validate locally:
@@ -41,7 +39,7 @@ Copy deployed `CONTRACT_ADDRESS` and send it to challenger.
 Submit batch with intentionally wrong final state:
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=19 DELTAS_CSV="5,-2,4,1" SEQUENCER_BOND_ETH=0.01 pnpm run interactive:submit:base-sepolia
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=19 DELTAS_CSV="5,-2,4,1" pnpm run interactive:submit:base-sepolia
 ```
 
 Then wait for challenger Turn C1.
@@ -83,7 +81,7 @@ Expected: sequencer loses this round, batch invalidated.
 Submit honest batch for `BATCH_ID=2`:
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV="5,-2,4,1" SEQUENCER_BOND_ETH=0.01 pnpm run interactive:submit:base-sepolia
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV="5,-2,4,1" pnpm run interactive:submit:base-sepolia
 ```
 
 Wait for challenger Turn C4.

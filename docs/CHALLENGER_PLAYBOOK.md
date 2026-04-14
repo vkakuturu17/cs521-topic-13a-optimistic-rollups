@@ -11,8 +11,6 @@ Use alongside [SEQUENCER_PLAYBOOK.md](SEQUENCER_PLAYBOOK.md).
 ```env
 DEPLOYER_PRIVATE_KEY=0x<challenger-private-key>
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-SEQUENCER_BOND_ETH=0.01
-CHALLENGER_BOND_ETH=0.005
 ```
 
 2. Install:
@@ -33,7 +31,7 @@ Get `CONTRACT_ADDRESS` from sequencer after deployment.
 After sequencer Turn S1 (batch submit), open dispute:
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract BATCH_ID=1 CHALLENGER_FINAL_STATE=18 CHALLENGER_BOND_ETH=0.005 pnpm run interactive:challenge:base-sepolia
+CONTRACT_ADDRESS=0xYourContract BATCH_ID=1 CHALLENGER_FINAL_STATE=18 pnpm run interactive:challenge:base-sepolia
 ```
 
 Then notify sequencer to run Turn S2.
@@ -69,7 +67,7 @@ CONTRACT_ADDRESS=0xYourContract pnpm run interactive:withdraw:base-sepolia
 After sequencer Turn S5 (batch submit for id 2), start challenge with wrong final state claim:
 
 ```bash
-CONTRACT_ADDRESS=0xYourContract BATCH_ID=2 CHALLENGER_FINAL_STATE=20 CHALLENGER_BOND_ETH=0.005 pnpm run interactive:challenge:base-sepolia
+CONTRACT_ADDRESS=0xYourContract BATCH_ID=2 CHALLENGER_FINAL_STATE=20 pnpm run interactive:challenge:base-sepolia
 ```
 
 Notify sequencer to run Turn S6.

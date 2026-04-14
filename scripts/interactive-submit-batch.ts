@@ -24,18 +24,17 @@ async function main() {
 
   if (!contractAddress || !initialStateRaw || !claimedFinalStateRaw || !deltasRaw) {
     throw new Error(
-      "Set CONTRACT_ADDRESS, INITIAL_STATE, CLAIMED_FINAL_STATE, DELTAS_CSV. Example: CONTRACT_ADDRESS=0x... INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV='5,-2,4,1' SEQUENCER_BOND_ETH=0.01 pnpm run interactive:submit:base-sepolia",
+      "Set CONTRACT_ADDRESS, INITIAL_STATE, CLAIMED_FINAL_STATE, DELTAS_CSV. Example: CONTRACT_ADDRESS=0x... INITIAL_STATE=10 CLAIMED_FINAL_STATE=18 DELTAS_CSV='5,-2,4,1' pnpm run interactive:submit:base-sepolia",
     );
   }
 
   const initialState = BigInt(initialStateRaw);
   const claimedFinalState = BigInt(claimedFinalStateRaw);
   const deltas = parseDeltas(deltasRaw);
-  const sequencerBondEth = process.env.SEQUENCER_BOND_ETH ?? "0.01";
-  const sequencerBond = ethers.parseEther(sequencerBondEth);
 
   const [sequencer] = await ethers.getSigners();
   const rollup = await ethers.getContractAt("InteractiveOptimisticRollup", contractAddress);
+  const sequencerBond = (await rollup.getFunction("sequencerBond")()) as bigint;
 
   const tx = await rollup
     .connect(sequencer)
@@ -48,6 +47,7 @@ async function main() {
   console.log("Contract:", contractAddress);
   console.log("Batch ID:", latestBatchId.toString());
   console.log("Deltas:", deltas.map((d) => d.toString()).join(","));
+  console.log("Bond sent (ETH):", ethers.formatEther(sequencerBond));
   console.log("Submit tx hash:", tx.hash);
   console.log("Submit block:", receipt?.blockNumber ?? "unknown");
 }
