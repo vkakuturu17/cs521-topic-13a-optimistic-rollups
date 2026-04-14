@@ -4,6 +4,12 @@ This playbook is for the sequencer operator only.
 
 Use alongside [CHALLENGER_PLAYBOOK.md](CHALLENGER_PLAYBOOK.md).
 
+Optional real-time monitor:
+
+```bash
+CONTRACT_ADDRESS=0xYourContract BATCH_ID=1 ACCOUNT_ADDRESS=0xSequencerWallet POLL_SECONDS=3 pnpm run interactive:live:base-sepolia
+```
+
 ## 0) One-Time Setup
 
 1. Configure `.env` on sequencer laptop:

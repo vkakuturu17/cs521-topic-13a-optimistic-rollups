@@ -11,6 +11,7 @@ Role-specific playbooks:
 
 - [SEQUENCER_PLAYBOOK.md](SEQUENCER_PLAYBOOK.md)
 - [CHALLENGER_PLAYBOOK.md](CHALLENGER_PLAYBOOK.md)
+- [INTERACTIVE_LIVE_VIEW.md](INTERACTIVE_LIVE_VIEW.md)
 
 ## Shared Queue (Who Runs Next)
 
