@@ -1,0 +1,36 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_24-0d0ac91075853d32d591ea36fedcf90dbe65da2c",
+  "solcVersion": "0.8.24",
+  "solcLongVersion": "0.8.24+commit.e11b9ed9",
+  "compilerType": "solc",
+  "userSourceNameMap": {
+    "contracts/SimpleOptimisticRollup.sol": "project/contracts/SimpleOptimisticRollup.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "shanghai",
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/SimpleOptimisticRollup.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ncontract SimpleOptimisticRollup {\n    struct Batch {\n        bytes32 stateRoot;\n        bytes32 txRoot;\n        uint256 submittedAt;\n        bool challenged;\n        bool finalized;\n    }\n\n    uint256 public immutable challengePeriod;\n    uint256 public latestBatchId;\n\n    mapping(uint256 => Batch) public batches;\n\n    event BatchSubmitted(uint256 indexed batchId, bytes32 indexed stateRoot, bytes32 txRoot, uint256 submittedAt);\n    event BatchChallenged(uint256 indexed batchId, address indexed challenger, bytes32 reasonHash);\n    event BatchFinalized(uint256 indexed batchId, bytes32 indexed stateRoot);\n\n    error BatchDoesNotExist(uint256 batchId);\n    error BatchAlreadyChallenged(uint256 batchId);\n    error BatchAlreadyFinalized(uint256 batchId);\n    error ChallengeWindowClosed(uint256 batchId);\n    error ChallengeWindowStillOpen(uint256 batchId);\n    error BatchIsChallenged(uint256 batchId);\n\n    constructor(uint256 _challengePeriodSeconds) {\n        challengePeriod = _challengePeriodSeconds;\n    }\n\n    function submitBatch(bytes32 _stateRoot, bytes32 _txRoot) external returns (uint256 batchId) {\n        batchId = ++latestBatchId;\n        batches[batchId] = Batch({\n            stateRoot: _stateRoot,\n            txRoot: _txRoot,\n            submittedAt: block.timestamp,\n            challenged: false,\n            finalized: false\n        });\n\n        emit BatchSubmitted(batchId, _stateRoot, _txRoot, block.timestamp);\n    }\n\n    function challengeBatch(uint256 _batchId, bytes32 _reasonHash) external {\n        Batch storage batch = batches[_batchId];\n        _ensureExists(_batchId, batch);\n\n        if (batch.finalized) revert BatchAlreadyFinalized(_batchId);\n        if (batch.challenged) revert BatchAlreadyChallenged(_batchId);\n        if (block.timestamp > batch.submittedAt + challengePeriod) revert ChallengeWindowClosed(_batchId);\n\n        batch.challenged = true;\n\n        emit BatchChallenged(_batchId, msg.sender, _reasonHash);\n    }\n\n    function finalizeBatch(uint256 _batchId) external {\n        Batch storage batch = batches[_batchId];\n        _ensureExists(_batchId, batch);\n\n        if (batch.finalized) revert BatchAlreadyFinalized(_batchId);\n        if (batch.challenged) revert BatchIsChallenged(_batchId);\n        if (block.timestamp < batch.submittedAt + challengePeriod) revert ChallengeWindowStillOpen(_batchId);\n\n        batch.finalized = true;\n\n        emit BatchFinalized(_batchId, batch.stateRoot);\n    }\n\n    function _ensureExists(uint256 _batchId, Batch storage batch) private view {\n        if (batch.submittedAt == 0) revert BatchDoesNotExist(_batchId);\n    }\n}\n"
+      }
+    }
+  }
+}
