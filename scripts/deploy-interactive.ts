@@ -23,8 +23,8 @@ function readPositiveEth(name: string, defaultValue: string): bigint {
 
 async function main() {
   const challengePeriodSeconds = readPositiveInt("CHALLENGE_PERIOD_SECONDS", 60);
-  const sequencerBond = readPositiveEth("SEQUENCER_BOND_ETH", "0.01");
-  const challengerBond = readPositiveEth("CHALLENGER_BOND_ETH", "0.005");
+  const sequencerBond = readPositiveEth("SEQUENCER_BOND_ETH", "0.001");
+  const challengerBond = readPositiveEth("CHALLENGER_BOND_ETH", "0.0005");
 
   const [deployer] = await ethers.getSigners();
 

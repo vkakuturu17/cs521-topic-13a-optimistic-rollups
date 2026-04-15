@@ -6,9 +6,9 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 
   export interface InteractiveOptimisticRollupInterface extends Interface {
-    getFunction(nameOrSignature: "batches" | "bisectDispute" | "challengePeriod" | "challengerBond" | "claimableBalances" | "disputes" | "finalizeBatch" | "getBatchDeltas" | "getDeltaAt" | "initiateChallenge" | "latestBatchId" | "resolveSingleStep" | "sequencerBond" | "submitBatch" | "withdrawClaimable"): FunctionFragment;
+    getFunction(nameOrSignature: "batches" | "bisectDispute" | "challengePeriod" | "challengerBond" | "claimableBalances" | "disputes" | "finalizeBatch" | "getBatchDeltas" | "getDeltaAt" | "initiateChallenge" | "latestBatchId" | "resolveSingleStep" | "sequencerBond" | "submitBatch" | "submitChallengerMidpointClaim" | "submitChallengerSingleStepClaim" | "submitSequencerMidpointClaim" | "submitSequencerSingleStepClaim" | "withdrawClaimable"): FunctionFragment;
 
-    getEvent(nameOrSignatureOrTopic: "BatchFinalized" | "BatchSubmitted" | "ChallengeInitiated" | "DisputeBisected" | "DisputeResolved"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "BatchFinalized" | "BatchSubmitted" | "ChallengeInitiated" | "DisputeBisected" | "DisputeResolved" | "MidpointClaimSubmitted" | "SingleStepClaimSubmitted"): EventFragment;
 
     encodeFunctionData(functionFragment: 'batches', values: [BigNumberish]): string;
 encodeFunctionData(functionFragment: 'bisectDispute', values: [BigNumberish, BigNumberish, BigNumberish]): string;
@@ -24,6 +24,10 @@ encodeFunctionData(functionFragment: 'latestBatchId', values?: undefined): strin
 encodeFunctionData(functionFragment: 'resolveSingleStep', values: [BigNumberish, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'sequencerBond', values?: undefined): string;
 encodeFunctionData(functionFragment: 'submitBatch', values: [BigNumberish, BigNumberish, BigNumberish[]]): string;
+encodeFunctionData(functionFragment: 'submitChallengerMidpointClaim', values: [BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'submitChallengerSingleStepClaim', values: [BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'submitSequencerMidpointClaim', values: [BigNumberish, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'submitSequencerSingleStepClaim', values: [BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'withdrawClaimable', values?: undefined): string;
 
     decodeFunctionResult(functionFragment: 'batches', data: BytesLike): Result;
@@ -40,6 +44,10 @@ decodeFunctionResult(functionFragment: 'latestBatchId', data: BytesLike): Result
 decodeFunctionResult(functionFragment: 'resolveSingleStep', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'sequencerBond', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'submitBatch', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'submitChallengerMidpointClaim', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'submitChallengerSingleStepClaim', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'submitSequencerMidpointClaim', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'submitSequencerSingleStepClaim', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'withdrawClaimable', data: BytesLike): Result;
   }
 
@@ -96,6 +104,30 @@ decodeFunctionResult(functionFragment: 'withdrawClaimable', data: BytesLike): Re
       export type InputTuple = [batchId: BigNumberish, challengerWon: boolean, sequencerWon: boolean, disputedIndex: BigNumberish];
       export type OutputTuple = [batchId: bigint, challengerWon: boolean, sequencerWon: boolean, disputedIndex: bigint];
       export interface OutputObject {batchId: bigint, challengerWon: boolean, sequencerWon: boolean, disputedIndex: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace MidpointClaimSubmittedEvent {
+      export type InputTuple = [batchId: BigNumberish, claimer: AddressLike, isSequencer: boolean, mid: BigNumberish, claimedStateAtMid: BigNumberish];
+      export type OutputTuple = [batchId: bigint, claimer: string, isSequencer: boolean, mid: bigint, claimedStateAtMid: bigint];
+      export interface OutputObject {batchId: bigint, claimer: string, isSequencer: boolean, mid: bigint, claimedStateAtMid: bigint };
+      export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
+      export type Filter = TypedDeferredTopicFilter<Event>
+      export type Log = TypedEventLog<Event>
+      export type LogDescription = TypedLogDescription<Event>
+    }
+
+  
+
+    export namespace SingleStepClaimSubmittedEvent {
+      export type InputTuple = [batchId: BigNumberish, claimer: AddressLike, isSequencer: boolean, disputedIndex: BigNumberish, claimedPostState: BigNumberish];
+      export type OutputTuple = [batchId: bigint, claimer: string, isSequencer: boolean, disputedIndex: bigint, claimedPostState: bigint];
+      export interface OutputObject {batchId: bigint, claimer: string, isSequencer: boolean, disputedIndex: bigint, claimedPostState: bigint };
       export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>
       export type Filter = TypedDeferredTopicFilter<Event>
       export type Log = TypedEventLog<Event>
@@ -180,7 +212,7 @@ decodeFunctionResult(functionFragment: 'withdrawClaimable', data: BytesLike): Re
     
     disputes: TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, boolean, boolean, bigint, bigint, bigint, bigint, boolean, boolean] & {challenger: string, active: boolean, resolved: boolean, start: bigint, end: bigint, sequencerFinalState: bigint, challengerFinalState: bigint, sequencerWon: boolean, challengerWon: boolean }],
+      [[string, boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean, boolean, bigint, bigint, boolean, boolean, boolean, boolean] & {challenger: string, active: boolean, resolved: boolean, start: bigint, end: bigint, mid: bigint, sequencerFinalState: bigint, challengerFinalState: bigint, sequencerStateAtMid: bigint, challengerStateAtMid: bigint, sequencerMidSubmitted: boolean, challengerMidSubmitted: boolean, sequencerSingleStepPostState: bigint, challengerSingleStepPostState: bigint, sequencerSingleStepSubmitted: boolean, challengerSingleStepSubmitted: boolean, sequencerWon: boolean, challengerWon: boolean }],
       'view'
     >
     
@@ -250,6 +282,38 @@ decodeFunctionResult(functionFragment: 'withdrawClaimable', data: BytesLike): Re
     
 
     
+    submitChallengerMidpointClaim: TypedContractMethod<
+      [_batchId: BigNumberish, _challengerStateAtMid: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    submitChallengerSingleStepClaim: TypedContractMethod<
+      [_batchId: BigNumberish, _challengerClaimedPostState: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    submitSequencerMidpointClaim: TypedContractMethod<
+      [_batchId: BigNumberish, _sequencerStateAtMid: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
+    submitSequencerSingleStepClaim: TypedContractMethod<
+      [_batchId: BigNumberish, _sequencerClaimedPostState: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     withdrawClaimable: TypedContractMethod<
       [],
       [void],
@@ -287,7 +351,7 @@ getFunction(nameOrSignature: 'claimableBalances'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'disputes'): TypedContractMethod<
       [arg0: BigNumberish, ],
-      [[string, boolean, boolean, bigint, bigint, bigint, bigint, boolean, boolean] & {challenger: string, active: boolean, resolved: boolean, start: bigint, end: bigint, sequencerFinalState: bigint, challengerFinalState: bigint, sequencerWon: boolean, challengerWon: boolean }],
+      [[string, boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean, boolean, bigint, bigint, boolean, boolean, boolean, boolean] & {challenger: string, active: boolean, resolved: boolean, start: bigint, end: bigint, mid: bigint, sequencerFinalState: bigint, challengerFinalState: bigint, sequencerStateAtMid: bigint, challengerStateAtMid: bigint, sequencerMidSubmitted: boolean, challengerMidSubmitted: boolean, sequencerSingleStepPostState: bigint, challengerSingleStepPostState: bigint, sequencerSingleStepSubmitted: boolean, challengerSingleStepSubmitted: boolean, sequencerWon: boolean, challengerWon: boolean }],
       'view'
     >;
 getFunction(nameOrSignature: 'finalizeBatch'): TypedContractMethod<
@@ -330,6 +394,26 @@ getFunction(nameOrSignature: 'submitBatch'): TypedContractMethod<
       [bigint],
       'payable'
     >;
+getFunction(nameOrSignature: 'submitChallengerMidpointClaim'): TypedContractMethod<
+      [_batchId: BigNumberish, _challengerStateAtMid: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'submitChallengerSingleStepClaim'): TypedContractMethod<
+      [_batchId: BigNumberish, _challengerClaimedPostState: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'submitSequencerMidpointClaim'): TypedContractMethod<
+      [_batchId: BigNumberish, _sequencerStateAtMid: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'submitSequencerSingleStepClaim'): TypedContractMethod<
+      [_batchId: BigNumberish, _sequencerClaimedPostState: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
 getFunction(nameOrSignature: 'withdrawClaimable'): TypedContractMethod<
       [],
       [void],
@@ -341,6 +425,8 @@ getEvent(key: 'BatchSubmitted'): TypedContractEvent<BatchSubmittedEvent.InputTup
 getEvent(key: 'ChallengeInitiated'): TypedContractEvent<ChallengeInitiatedEvent.InputTuple, ChallengeInitiatedEvent.OutputTuple, ChallengeInitiatedEvent.OutputObject>;
 getEvent(key: 'DisputeBisected'): TypedContractEvent<DisputeBisectedEvent.InputTuple, DisputeBisectedEvent.OutputTuple, DisputeBisectedEvent.OutputObject>;
 getEvent(key: 'DisputeResolved'): TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
+getEvent(key: 'MidpointClaimSubmitted'): TypedContractEvent<MidpointClaimSubmittedEvent.InputTuple, MidpointClaimSubmittedEvent.OutputTuple, MidpointClaimSubmittedEvent.OutputObject>;
+getEvent(key: 'SingleStepClaimSubmitted'): TypedContractEvent<SingleStepClaimSubmittedEvent.InputTuple, SingleStepClaimSubmittedEvent.OutputTuple, SingleStepClaimSubmittedEvent.OutputObject>;
 
     filters: {
       
@@ -362,6 +448,14 @@ getEvent(key: 'DisputeResolved'): TypedContractEvent<DisputeResolvedEvent.InputT
 
       'DisputeResolved(uint256,bool,bool,uint256)': TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
       DisputeResolved: TypedContractEvent<DisputeResolvedEvent.InputTuple, DisputeResolvedEvent.OutputTuple, DisputeResolvedEvent.OutputObject>;
+    
+
+      'MidpointClaimSubmitted(uint256,address,bool,uint256,int256)': TypedContractEvent<MidpointClaimSubmittedEvent.InputTuple, MidpointClaimSubmittedEvent.OutputTuple, MidpointClaimSubmittedEvent.OutputObject>;
+      MidpointClaimSubmitted: TypedContractEvent<MidpointClaimSubmittedEvent.InputTuple, MidpointClaimSubmittedEvent.OutputTuple, MidpointClaimSubmittedEvent.OutputObject>;
+    
+
+      'SingleStepClaimSubmitted(uint256,address,bool,uint256,int256)': TypedContractEvent<SingleStepClaimSubmittedEvent.InputTuple, SingleStepClaimSubmittedEvent.OutputTuple, SingleStepClaimSubmittedEvent.OutputObject>;
+      SingleStepClaimSubmitted: TypedContractEvent<SingleStepClaimSubmittedEvent.InputTuple, SingleStepClaimSubmittedEvent.OutputTuple, SingleStepClaimSubmittedEvent.OutputObject>;
     
     };
   }

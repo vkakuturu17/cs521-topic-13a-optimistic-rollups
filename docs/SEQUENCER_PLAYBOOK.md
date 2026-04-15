@@ -4,6 +4,34 @@ This playbook is for the sequencer operator only.
 
 Use alongside [CHALLENGER_PLAYBOOK.md](CHALLENGER_PLAYBOOK.md).
 
+## Single Program Mode (Recommended)
+
+Instead of running submit/status/finalize manually, you can run one sequencer process.
+
+It will:
+
+1. submit batch with bond,
+2. poll every `POLL_SECONDS` for dispute/finalization conditions,
+3. finalize when the challenge period allows,
+4. print terminal outcome and whether sequencer funds are claimable.
+
+Scenario A (challenger should win):
+
+```bash
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 CLAIMED_FINAL_STATE=19 DELTAS_CSV="5,-2,4,1" POLL_SECONDS=3 pnpm run interactive:sequencer:runner:base-sepolia
+```
+
+Scenario B (sequencer should win):
+
+```bash
+CONTRACT_ADDRESS=0xYourContract INITIAL_STATE=10 DELTAS_CSV="5,-2,4,1" POLL_SECONDS=3 pnpm run interactive:sequencer:runner:base-sepolia
+```
+
+Optional:
+
+- `CLAIMED_FINAL_STATE` if you want to intentionally submit a wrong final claim.
+- `MAX_POLLS=7200` (default) to cap total loop iterations.
+
 Optional real-time monitor:
 
 ```bash

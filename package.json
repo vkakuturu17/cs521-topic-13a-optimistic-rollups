@@ -29,6 +29,15 @@
     "interactive:bisect:local": "hardhat run scripts/interactive-bisect.ts --network localhost",
     "interactive:bisect:base-sepolia": "hardhat run scripts/interactive-bisect.ts --network baseSepolia",
     "interactive:bisect:base": "hardhat run scripts/interactive-bisect.ts --network base",
+    "interactive:auto:local": "hardhat run scripts/interactive-auto-bisect.ts --network localhost",
+    "interactive:auto:base-sepolia": "hardhat run scripts/interactive-auto-bisect.ts --network baseSepolia",
+    "interactive:auto:base": "hardhat run scripts/interactive-auto-bisect.ts --network base",
+    "interactive:sequencer:runner:local": "hardhat run scripts/interactive-sequencer-runner.ts --network localhost",
+    "interactive:sequencer:runner:base-sepolia": "hardhat run scripts/interactive-sequencer-runner.ts --network baseSepolia",
+    "interactive:sequencer:runner:base": "hardhat run scripts/interactive-sequencer-runner.ts --network base",
+    "interactive:challenger:runner:local": "hardhat run scripts/interactive-challenger-runner.ts --network localhost",
+    "interactive:challenger:runner:base-sepolia": "hardhat run scripts/interactive-challenger-runner.ts --network baseSepolia",
+    "interactive:challenger:runner:base": "hardhat run scripts/interactive-challenger-runner.ts --network base",
     "interactive:resolve:local": "hardhat run scripts/interactive-resolve.ts --network localhost",
     "interactive:resolve:base-sepolia": "hardhat run scripts/interactive-resolve.ts --network baseSepolia",
     "interactive:resolve:base": "hardhat run scripts/interactive-resolve.ts --network base",
@@ -57,15 +66,15 @@
     "finalize:batch": "hardhat run scripts/finalize-batch.ts --network localhost",
     "finalize:batch:base": "hardhat run scripts/finalize-batch.ts --network base",
     "finalize:batch:base-sepolia": "hardhat run scripts/finalize-batch.ts --network baseSepolia",
-    "batch:status": "hardhat run scripts/batch-status.ts --network localhost"
-    ,"batch:status:base": "hardhat run scripts/batch-status.ts --network base"
-    ,"batch:status:base-sepolia": "hardhat run scripts/batch-status.ts --network baseSepolia"
-    ,"faucet:local": "hardhat run scripts/faucet-fund.ts --network localhost"
-    ,"faucet:base": "hardhat run scripts/faucet-fund.ts --network base"
-    ,"faucet:base-sepolia": "hardhat run scripts/faucet-fund.ts --network baseSepolia"
-    ,"balance:local": "hardhat run scripts/check-balance.ts --network localhost"
-    ,"balance:base": "hardhat run scripts/check-balance.ts --network base"
-    ,"balance:base-sepolia": "hardhat run scripts/check-balance.ts --network baseSepolia"
+    "batch:status": "hardhat run scripts/batch-status.ts --network localhost",
+    "batch:status:base": "hardhat run scripts/batch-status.ts --network base",
+    "batch:status:base-sepolia": "hardhat run scripts/batch-status.ts --network baseSepolia",
+    "faucet:local": "hardhat run scripts/faucet-fund.ts --network localhost",
+    "faucet:base": "hardhat run scripts/faucet-fund.ts --network base",
+    "faucet:base-sepolia": "hardhat run scripts/faucet-fund.ts --network baseSepolia",
+    "balance:local": "hardhat run scripts/check-balance.ts --network localhost",
+    "balance:base": "hardhat run scripts/check-balance.ts --network base",
+    "balance:base-sepolia": "hardhat run scripts/check-balance.ts --network baseSepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^4.0.7",

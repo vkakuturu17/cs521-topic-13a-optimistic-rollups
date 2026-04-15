@@ -4,12 +4,15 @@ const { ethers } = await network.connect();
 
 async function main() {
   const contractAddress = process.env.CONTRACT_ADDRESS;
+  const withdrawalKey = process.env.WITHDRAWAL_KEY;
 
-  if (!contractAddress) {
-    throw new Error("Set CONTRACT_ADDRESS. Example: CONTRACT_ADDRESS=0x... pnpm run interactive:withdraw:base-sepolia");
+  if (!contractAddress || !withdrawalKey) {
+    throw new Error(
+      "Set CONTRACT_ADDRESS and WITHDRAWAL_KEY. Example: CONTRACT_ADDRESS=0x... WITHDRAWAL_KEY=0x... pnpm run interactive:withdraw:base-sepolia",
+    );
   }
 
-  const [caller] = await ethers.getSigners();
+  const caller = new ethers.Wallet(withdrawalKey, ethers.provider);
   const rollup = await ethers.getContractAt("InteractiveOptimisticRollup", contractAddress);
 
   const tx = await rollup.connect(caller).withdrawClaimable();

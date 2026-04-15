@@ -20,8 +20,17 @@ contract InteractiveOptimisticRollup {
         bool resolved;
         uint256 start;
         uint256 end;
+        uint256 mid;
         int256 sequencerFinalState;
         int256 challengerFinalState;
+        int256 sequencerStateAtMid;
+        int256 challengerStateAtMid;
+        bool sequencerMidSubmitted;
+        bool challengerMidSubmitted;
+        int256 sequencerSingleStepPostState;
+        int256 challengerSingleStepPostState;
+        bool sequencerSingleStepSubmitted;
+        bool challengerSingleStepSubmitted;
         bool sequencerWon;
         bool challengerWon;
     }
@@ -44,7 +53,21 @@ contract InteractiveOptimisticRollup {
         uint256 submittedAt
     );
     event ChallengeInitiated(uint256 indexed batchId, int256 challengerFinalState);
+    event MidpointClaimSubmitted(
+        uint256 indexed batchId,
+        address indexed claimer,
+        bool isSequencer,
+        uint256 mid,
+        int256 claimedStateAtMid
+    );
     event DisputeBisected(uint256 indexed batchId, uint256 start, uint256 end, uint256 mid, bool lowerHalfDisputed);
+    event SingleStepClaimSubmitted(
+        uint256 indexed batchId,
+        address indexed claimer,
+        bool isSequencer,
+        uint256 disputedIndex,
+        int256 claimedPostState
+    );
     event DisputeResolved(uint256 indexed batchId, bool challengerWon, bool sequencerWon, uint256 disputedIndex);
     event BatchFinalized(uint256 indexed batchId, int256 claimedFinalState);
 
@@ -58,6 +81,10 @@ contract InteractiveOptimisticRollup {
     error DisputeNotActive(uint256 batchId);
     error DisputeAlreadyResolved(uint256 batchId);
     error DisputeNotAtSingleStep(uint256 batchId);
+    error OnlySequencer(address caller, address sequencer);
+    error OnlyChallenger(address caller, address challenger);
+    error MidpointAlreadySubmitted(uint256 batchId, bool isSequencer);
+    error SingleStepClaimAlreadySubmitted(uint256 batchId, bool isSequencer);
     error ClaimsMustDiffer();
     error InvalidDisputedIndex();
     error InvalidSequencerBond(uint256 expected, uint256 actual);
@@ -116,22 +143,74 @@ contract InteractiveOptimisticRollup {
         dispute.resolved = false;
         dispute.start = 0;
         dispute.end = batch.txCount - 1;
+        dispute.mid = 0;
         dispute.sequencerFinalState = batch.claimedFinalState;
         dispute.challengerFinalState = _challengerFinalState;
+        dispute.sequencerStateAtMid = 0;
+        dispute.challengerStateAtMid = 0;
+        dispute.sequencerMidSubmitted = false;
+        dispute.challengerMidSubmitted = false;
+        dispute.sequencerSingleStepPostState = 0;
+        dispute.challengerSingleStepPostState = 0;
+        dispute.sequencerSingleStepSubmitted = false;
+        dispute.challengerSingleStepSubmitted = false;
         dispute.sequencerWon = false;
         dispute.challengerWon = false;
 
         emit ChallengeInitiated(_batchId, _challengerFinalState);
     }
 
+    function submitSequencerMidpointClaim(uint256 _batchId, int256 _sequencerStateAtMid) external {
+        Batch storage batch = _mustGetBatch(_batchId);
+        Dispute storage dispute = disputes[_batchId];
+        if (msg.sender != batch.sequencer) revert OnlySequencer(msg.sender, batch.sequencer);
+        if (!dispute.active) revert DisputeNotActive(_batchId);
+        if (dispute.resolved) revert DisputeAlreadyResolved(_batchId);
+        if (dispute.start == dispute.end) {
+            revert DisputeNotAtSingleStep(_batchId);
+        }
+        if (dispute.sequencerMidSubmitted) revert MidpointAlreadySubmitted(_batchId, true);
+
+        uint256 mid = (dispute.start + dispute.end) / 2;
+        dispute.mid = mid;
+        dispute.sequencerStateAtMid = _sequencerStateAtMid;
+        dispute.sequencerMidSubmitted = true;
+
+        emit MidpointClaimSubmitted(_batchId, msg.sender, true, mid, _sequencerStateAtMid);
+
+        if (dispute.challengerMidSubmitted) {
+            _advanceDisputeRound(_batchId);
+        }
+    }
+
+    function submitChallengerMidpointClaim(uint256 _batchId, int256 _challengerStateAtMid) external {
+        Dispute storage dispute = disputes[_batchId];
+        if (msg.sender != dispute.challenger) revert OnlyChallenger(msg.sender, dispute.challenger);
+        if (!dispute.active) revert DisputeNotActive(_batchId);
+        if (dispute.resolved) revert DisputeAlreadyResolved(_batchId);
+        if (dispute.start == dispute.end) {
+            revert DisputeNotAtSingleStep(_batchId);
+        }
+        if (dispute.challengerMidSubmitted) revert MidpointAlreadySubmitted(_batchId, false);
+
+        uint256 mid = (dispute.start + dispute.end) / 2;
+        dispute.mid = mid;
+        dispute.challengerStateAtMid = _challengerStateAtMid;
+        dispute.challengerMidSubmitted = true;
+
+        emit MidpointClaimSubmitted(_batchId, msg.sender, false, mid, _challengerStateAtMid);
+
+        if (dispute.sequencerMidSubmitted) {
+            _advanceDisputeRound(_batchId);
+        }
+    }
+
+    // Backward-compatible helper: submit both midpoint claims in one call.
     function bisectDispute(uint256 _batchId, int256 _sequencerStateAtMid, int256 _challengerStateAtMid) external {
         Dispute storage dispute = disputes[_batchId];
         if (!dispute.active) revert DisputeNotActive(_batchId);
         if (dispute.resolved) revert DisputeAlreadyResolved(_batchId);
-
-        if (dispute.start == dispute.end) {
-            revert DisputeNotAtSingleStep(_batchId);
-        }
+        if (dispute.start == dispute.end) revert DisputeNotAtSingleStep(_batchId);
 
         uint256 mid = (dispute.start + dispute.end) / 2;
         bool lowerHalfDisputed = _sequencerStateAtMid != _challengerStateAtMid;
@@ -145,11 +224,90 @@ contract InteractiveOptimisticRollup {
         emit DisputeBisected(_batchId, dispute.start, dispute.end, mid, lowerHalfDisputed);
     }
 
+    function submitSequencerSingleStepClaim(uint256 _batchId, int256 _sequencerClaimedPostState) external {
+        Batch storage batch = _mustGetBatch(_batchId);
+        Dispute storage dispute = disputes[_batchId];
+
+        if (msg.sender != batch.sequencer) revert OnlySequencer(msg.sender, batch.sequencer);
+        if (!dispute.active) revert DisputeNotActive(_batchId);
+        if (dispute.resolved) revert DisputeAlreadyResolved(_batchId);
+        if (dispute.start != dispute.end) revert DisputeNotAtSingleStep(_batchId);
+        if (dispute.sequencerSingleStepSubmitted) revert SingleStepClaimAlreadySubmitted(_batchId, true);
+
+        dispute.sequencerSingleStepPostState = _sequencerClaimedPostState;
+        dispute.sequencerSingleStepSubmitted = true;
+
+        emit SingleStepClaimSubmitted(_batchId, msg.sender, true, dispute.start, _sequencerClaimedPostState);
+
+        if (dispute.challengerSingleStepSubmitted) {
+            _resolveSingleStepWithClaims(
+                _batchId,
+                dispute.sequencerSingleStepPostState,
+                dispute.challengerSingleStepPostState
+            );
+        }
+    }
+
+    function submitChallengerSingleStepClaim(uint256 _batchId, int256 _challengerClaimedPostState) external {
+        Dispute storage dispute = disputes[_batchId];
+
+        if (msg.sender != dispute.challenger) revert OnlyChallenger(msg.sender, dispute.challenger);
+        if (!dispute.active) revert DisputeNotActive(_batchId);
+        if (dispute.resolved) revert DisputeAlreadyResolved(_batchId);
+        if (dispute.start != dispute.end) revert DisputeNotAtSingleStep(_batchId);
+        if (dispute.challengerSingleStepSubmitted) revert SingleStepClaimAlreadySubmitted(_batchId, false);
+
+        dispute.challengerSingleStepPostState = _challengerClaimedPostState;
+        dispute.challengerSingleStepSubmitted = true;
+
+        emit SingleStepClaimSubmitted(_batchId, msg.sender, false, dispute.start, _challengerClaimedPostState);
+
+        if (dispute.sequencerSingleStepSubmitted) {
+            _resolveSingleStepWithClaims(
+                _batchId,
+                dispute.sequencerSingleStepPostState,
+                dispute.challengerSingleStepPostState
+            );
+        }
+    }
+
+    // Backward-compatible helper: submit both single-step claims in one call.
     function resolveSingleStep(
         uint256 _batchId,
         int256 _sequencerClaimedPostState,
         int256 _challengerClaimedPostState
     ) external {
+        _resolveSingleStepWithClaims(_batchId, _sequencerClaimedPostState, _challengerClaimedPostState);
+    }
+
+    function _advanceDisputeRound(uint256 _batchId) private {
+        Dispute storage dispute = disputes[_batchId];
+        if (!dispute.sequencerMidSubmitted || !dispute.challengerMidSubmitted) {
+            return;
+        }
+
+        uint256 mid = dispute.mid;
+        bool lowerHalfDisputed = dispute.sequencerStateAtMid != dispute.challengerStateAtMid;
+
+        if (lowerHalfDisputed) {
+            dispute.end = mid;
+        } else {
+            dispute.start = mid + 1;
+        }
+
+        dispute.sequencerMidSubmitted = false;
+        dispute.challengerMidSubmitted = false;
+        dispute.sequencerStateAtMid = 0;
+        dispute.challengerStateAtMid = 0;
+
+        emit DisputeBisected(_batchId, dispute.start, dispute.end, mid, lowerHalfDisputed);
+    }
+
+    function _resolveSingleStepWithClaims(
+        uint256 _batchId,
+        int256 _sequencerClaimedPostState,
+        int256 _challengerClaimedPostState
+    ) private {
         Dispute storage dispute = disputes[_batchId];
         Batch storage batch = _mustGetBatch(_batchId);
 
@@ -164,32 +322,39 @@ contract InteractiveOptimisticRollup {
         int256 preState = _stateBeforeIndex(_batchId, disputedIndex);
         int256 expectedPostState = preState + batchDeltas[_batchId][disputedIndex];
 
-        bool sequencerCorrect = _sequencerClaimedPostState == expectedPostState;
-        bool challengerCorrect = _challengerClaimedPostState == expectedPostState;
-
         dispute.active = false;
         dispute.resolved = true;
+        dispute.sequencerSingleStepSubmitted = false;
+        dispute.challengerSingleStepSubmitted = false;
 
-        if (challengerCorrect && !sequencerCorrect) {
-            dispute.challengerWon = true;
-            dispute.sequencerWon = false;
-            batch.invalidated = true;
-            batch.challenged = true;
-
-            claimableBalances[dispute.challenger] += sequencerBond + challengerBond;
-            batch.bondSettled = true;
+        if (_challengerClaimedPostState == expectedPostState && _sequencerClaimedPostState != expectedPostState) {
+            _settleChallengerWin(dispute, batch);
         } else {
             // If sequencer is correct (or challenger cannot prove correctness), challenger loses.
-            dispute.challengerWon = false;
-            dispute.sequencerWon = true;
-            batch.invalidated = false;
-            batch.challenged = false;
-
-            claimableBalances[batch.sequencer] += sequencerBond + challengerBond;
-            batch.bondSettled = true;
+            _settleSequencerWin(dispute, batch);
         }
 
         emit DisputeResolved(_batchId, dispute.challengerWon, dispute.sequencerWon, disputedIndex);
+    }
+
+    function _settleChallengerWin(Dispute storage dispute, Batch storage batch) private {
+        dispute.challengerWon = true;
+        dispute.sequencerWon = false;
+        batch.invalidated = true;
+        batch.challenged = true;
+
+        claimableBalances[dispute.challenger] += sequencerBond + challengerBond;
+        batch.bondSettled = true;
+    }
+
+    function _settleSequencerWin(Dispute storage dispute, Batch storage batch) private {
+        dispute.challengerWon = false;
+        dispute.sequencerWon = true;
+        batch.invalidated = false;
+        batch.challenged = false;
+
+        claimableBalances[batch.sequencer] += sequencerBond + challengerBond;
+        batch.bondSettled = true;
     }
 
     function finalizeBatch(uint256 _batchId) external {
