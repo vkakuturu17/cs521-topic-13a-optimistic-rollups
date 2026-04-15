@@ -33,9 +33,6 @@ Optional:
 # Deltas used by sequencer assertion math (defaults to SUBMITTED_DELTAS_CSV)
 ACTUAL_USED_DELTAS_CSV="5,-2,5,1"
 
-# Explicit final-state argument to submitBatch (defaults to computed assertion final)
-CLAIMED_FINAL_STATE=19
-
 # Step-by-step demo mode is ON by default. Type yes to continue each action.
 # Set STEP_MODE=false to run without pauses.
 STEP_MODE=false
