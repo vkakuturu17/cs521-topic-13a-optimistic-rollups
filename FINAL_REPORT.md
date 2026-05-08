@@ -359,7 +359,7 @@ The most consequential simplification is the integer-delta state model.
 
 **What this discards:** the *content* of execution. We cannot run smart contracts, host applications, or represent multiple accounts. Our "state" is one integer; our "transactions" are integers added to it.
 
-**What Merkle-committed state would require differently.** If state were committed via a Merkle root rather than a plain integer, the bisection mechanics would need to change in two specific places.
+**What Merkle-committed state would require differently:** If state were committed via a Merkle root rather than a plain integer, the bisection mechanics would need to change in two specific places.
 
 *At each midpoint claim*: instead of posting a plain integer (e.g., `sequencerStateAtMid = 13`), each party would post a **32-byte state root hash**—a Merkle root over the entire rollup state after executing transactions through that midpoint index. The contract would store and compare these hashes. The comparison semantics are identical (`sequencerMidRoot != challengerMidRoot` still indicates the lower half is disputed), but the claimed value now represents a full EVM state commitment. The parties are bound to this commitment without needing to prove its correctness on-chain at claim time; they cannot later contradict their earlier claim.
 
